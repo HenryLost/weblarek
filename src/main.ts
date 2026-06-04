@@ -1,13 +1,17 @@
 import "./scss/styles.scss";
 
+import { API_URL } from "./utils/constants";
+// Импортируем моковые данные для проверки работы модели
+import { apiProducts } from "./utils/data";
+
 import { Products } from "./components/Models/Produsts";
 import { Basket } from "./components/Models/Basket";
 import { Order } from "./components/Models/Order";
 import { Api } from "./components/base/Api";
-import { WebLarekApi } from "./components/base/ShopApi";
+import { WebLarekApi } from "./components/ShopApi";
 
 // Создаём API-слой
-const api = new Api("https://larek-api.nomoreparties.co/api/weblarek");
+const api = new Api(API_URL);
 const webApi = new WebLarekApi(api);
 
 // Добавляем модели
@@ -15,86 +19,88 @@ const productsModel = new Products();
 const basketModel = new Basket();
 const orderModel = new Order();
 
-// Проверка методов класса Products
+// Проверка моделей на моковых данных
+
+// Сохраняем товары в модель
+productsModel.setItems(apiProducts.items);
+// Получаем список товаров на странице
+console.log("Массив товаров из каталога: ", productsModel.getItems());
+
+const product = apiProducts.items[0];
+
+// Products
+
+// Проверяем работу метода setSelected() - сохранения выбранной карточки товара
+productsModel.setSelected(product);
+// Проверяем работу метода getSelected() - получения выбранной карточки товара
+console.log("Выбранный  товар: ", productsModel.getSelected());
+// Проверяем работу метода getItemById() - поиск товара по id
+console.log("Товар найден по id: ", productsModel.getItemById(product.id));
+
+// Basket
+
+// Проверяем работу метода hasProduct() - наличия товара в магазине
+console.log("Товар добавлен: ", basketModel.hasProduct(product.id));
+// Проверяем работу метода getCountProducts() -
+// подсчёта количества товаров в корзине
+console.log(
+  "Количество товаров в корзине: ",
+  basketModel.getCountProducts().length,
+);
+// Проверяем работу метода getTotalPrice() - общаей стоимости товаров в корзине
+console.log("Общая стоимость товаров в корзине: ", basketModel.getTotalPrice());
+// Проверяем работу метода removeProduct() - удаления товара из корзины
+basketModel.removeProduct(product.id);
+// Проверяем, что товар был удалён из корзины
+console.log("Товар удалён: ", !basketModel.hasProduct(product.id));
+
+// Проверка работу метода clearBasket() - очистки корзины
+
+// Добавляем товары в корзину методом addProduct()
+basketModel.addProduct(apiProducts.items[0]);
+basketModel.addProduct(apiProducts.items[1]);
+
+basketModel.clearBasket();
+// Проверяем, что корзина очищена
+console.log("Корзина очищена: ", basketModel.getCountProducts().length === 0);
+
+// Order
+
+console.log("Начальные данные покупателя:", orderModel.getBuyer());
+
+console.log("Ошибки пустой формы:", orderModel.validateOrder());
+
+orderModel.setBuyer({
+  payment: "card",
+  email: "test@test.ru",
+  phone: "+79999999999",
+  address: "Москва",
+});
+
+console.log("Данные после заполнения:", orderModel.getBuyer());
+
+console.log("Ошибки заполненной формы:", orderModel.validateOrder());
+
+// Очищаем форму
+orderModel.clearOrder();
+
+console.log("Данные после очистки:", orderModel.getBuyer());
+
+// Проверка загрузки с сервера
 
 webApi
   .getProducts()
   .then((data) => {
-    // Сохраняем товары в модель
     productsModel.setItems(data.items);
 
-    // Получаем список товаров на странице
-    console.log("Массив товаров из каталога: ", productsModel.getItems());
-
-    // Проверяем, что товары сохранились
     console.log(
-      "Количество товаров совпадает: ",
-      productsModel.getItems().length === data.items.length,
+      "Товары успешно загружены с сервера:",
+      productsModel.getItems(),
     );
 
-    // Выбираем первый товар из каталога для тестирования setSelected() и getSelected() -
-    // методов для сохранения и получения выбранной карточки товара
-    const product = data.items[0];
-
-    // Проверяем работу метода setSelected() - сохранения выбранной карточки товара
-    productsModel.setSelected(product);
-
-    // Проверяем работу метода getSelected() - получения выбранной карточки товара
-    console.log("Выбранный  товар: ", productsModel.getSelected());
-
-    // Убеждаемся, что getSelected() возвращает тот же объект, что
-    // был передан в setSelected(),
-    // другими словами: Проверяем, что выбран именно нужный товар
     console.log(
-      "Выбранный товар совпадает: ",
-      productsModel.getSelected() === product,
-    );
-
-    // Проверка методов класса Basket
-
-    // Берём товары из модели
-    const basketProduct = product;
-
-    // Проверяем работу метода addProduct() - добавления товара в корзину
-    basketModel.addProduct(basketProduct);
-
-    // Проверяем работу метода getCountProducts() -
-    // подсчёта количества товаров в корзине
-    console.log(
-      "Количество товаров в корзине: ",
-      basketModel.getCountProducts().length,
-    );
-
-    // Проверяем работу метода hasProduct() - наличия товара в магазине
-    console.log("Товар добавлен: ", basketModel.hasProduct(basketProduct.id));
-
-    // Проверяем работу метода getTotalPrice() - общаей стоимости товаров в корзине
-    console.log(
-      "Общая стоимость товаров в корзине: ",
-      basketModel.getTotalPrice(),
-    );
-
-    // Проверяем работу метода removeProduct() - удаления товара из корзины
-    basketModel.removeProduct(basketProduct.id);
-
-    // Проверяем, что товар был удалён из корзины
-    console.log("Товар удалён: ", !basketModel.hasProduct(basketProduct.id));
-
-    // Проверка содержимого корзины после удаления товара
-    console.log(
-      "Товары в корзине после удаления: ",
-      basketModel.getCountProducts(),
-    );
-
-    // Проверка методов класса Order
-
-    // Получаем данные покупателя
-    console.log("Данные покупателя: ", orderModel.getBuyer());
-
-    // Проверяем корректность данных заказа
-    console.log(
-      "Данные покупателя заполнены корректно: ",
-      orderModel.validateOrder(),
+      "Количество товаров совпадает:",
+      productsModel.getItems.length === data.items.length,
     );
   })
   .catch((err) => {

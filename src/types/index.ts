@@ -14,11 +14,20 @@ export interface IProduct {
   price: number | null;
 }
 
+export type TPayment = 'card' | 'cash';
+
 export interface IBuyer {
-  payment: 'card' | 'cash' | '';
-  email: string;
-  phone: string;
-  address: string;
+  payment: TPayment | null;
+  email?: string;
+  phone?: string;
+  address?: string;
+}
+
+export type TErrors = {
+  payment?: string;
+  email?: string;
+  phone?: string;
+  address?: string;  
 }
 
 export interface IProductsResponse {
@@ -28,6 +37,7 @@ export interface IProductsResponse {
 
 export interface IOrderRequest extends IBuyer {
   items: string[];
+  total: number;
 }
 
 export interface IOrderResponse {

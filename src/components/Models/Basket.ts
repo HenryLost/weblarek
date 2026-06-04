@@ -15,6 +15,10 @@ export class Basket {
     item => item.id !== id
   )}
 
+  clearBasket(): void {
+    this.items = [];
+  }
+
   // Подсчёт количества продуктов в корзине
   getCountProducts(): IProduct[] {
     return this.items;

@@ -15,6 +15,11 @@ export class Products {
     this.items = items;
   }
 
+  // Получаем товар по его id
+  getItemById(id: string): IProduct | undefined {
+    return this.items.find(item => item.id === id);
+  }
+
   // Сохраняем выбранную карточку
   setSelected(product: IProduct): void {
     this.selected = product;
