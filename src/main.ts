@@ -70,11 +70,23 @@ console.log("Начальные данные покупателя:", orderModel.
 
 console.log("Ошибки пустой формы:", orderModel.validateOrder());
 
+// Частичное заполнение
 orderModel.setBuyer({
   payment: "card",
+});
+
+console.log('После выбора оплаты:',
+  orderModel.getBuyer()
+);
+
+// Дополняем данные
+orderModel.setBuyer({
   email: "test@test.ru",
-  phone: "+79999999999",
-  address: "Москва",
+});
+
+orderModel.setBuyer({
+  phone:  '+79999999999',
+  address: 'Москва'
 });
 
 console.log("Данные после заполнения:", orderModel.getBuyer());
@@ -100,7 +112,7 @@ webApi
 
     console.log(
       "Количество товаров совпадает:",
-      productsModel.getItems.length === data.items.length,
+      productsModel.getItems().length === data.items.length,
     );
   })
   .catch((err) => {

@@ -17,7 +17,7 @@ clearOrder(): void {
 protected buyer: IBuyer = {...this.initialBuyer};
 
 // Сохранение данных покупателя
-setBuyer(data: IBuyer): void {
+setBuyer(data: Partial<IBuyer>): void {
   this.buyer = {
     ...this.buyer,
     ...data,
