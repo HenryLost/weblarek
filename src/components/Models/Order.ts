@@ -3,7 +3,7 @@ import { IBuyer, TErrors } from "../../types";
 // Только хранение данных!
 export class Order {
   protected readonly initialBuyer: IBuyer = {
-  payment:  null,
+  payment: '',
   email: '',
   phone:  '',
   address: ''   
@@ -32,6 +32,7 @@ getBuyer(): IBuyer {
 // Проверка данных заказа
 validateOrder(): TErrors {
   const errors: TErrors = {};
+  
   if(!this.buyer.payment){
     errors.payment = 'Обязательно нужно указать тип оплаты!';
   }

@@ -14,13 +14,13 @@ export interface IProduct {
   price: number | null;
 }
 
-export type TPayment = 'card' | 'cash';
+export type TPayment = 'card' | 'cash' | '';
 
 export interface IBuyer {
-  payment: TPayment | null;
-  email?: string;
-  phone?: string;
-  address?: string;
+  payment: TPayment;
+  email: string;
+  phone: string;
+  address: string;
 }
 
 export type TErrors = {
@@ -28,7 +28,7 @@ export type TErrors = {
   email?: string;
   phone?: string;
   address?: string;  
-}
+};
 
 export interface IProductsResponse {
   total: number;

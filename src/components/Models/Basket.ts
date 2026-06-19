@@ -4,6 +4,10 @@ import { IProduct } from "../../types";
 export class Basket {
   protected items: IProduct[] = [];
 
+  getItems(): IProduct[] {
+    return this.items;
+  }
+
   // Добавление продукта в корзину
   addProduct(product: IProduct): void {
     this.items.push(product);
@@ -17,11 +21,6 @@ export class Basket {
 
   clearBasket(): void {
     this.items = [];
-  }
-
-  // Подсчёт количества продуктов в корзине
-  getCountProducts(): IProduct[] {
-    return this.items;
   }
 
   // Подсчёт стоимости товаров в корзине

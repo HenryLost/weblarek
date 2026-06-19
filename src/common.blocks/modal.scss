@@ -19,12 +19,21 @@
   &__container {
     @include mixins.container;
     @include mixins.flex(column);
+
     gap: $defaultPadding;
     background-color: $background;
     // min-height: 90vmin;
     border-radius: 3rem;
     box-sizing: border-box;
     position: relative;
+    width: calc(100% - 4rem);
+    max-width: calc(1320px - 6rem);
+  }
+
+  &__container_card,
+  &__container_basket,
+  &__container_form {
+    max-width: calc(1320px - 6rem);
   }
 
   &__content {
