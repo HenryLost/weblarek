@@ -1,5 +1,5 @@
 import { ensureElement } from "../../../utils/utils";
-import { Component } from "../../base/Component";
+import { Form } from "../Form";
 import { IEvents } from "../../base/Events";
 
 interface IContactsView {
@@ -9,17 +9,15 @@ interface IContactsView {
   errors: string;
 }
 
-export class ContactsView extends Component<IContactsView> {
+export class ContactsView extends Form<IContactsView> {
   protected emailInput: HTMLInputElement;
   protected phoneInput: HTMLInputElement;
-  protected submitButton: HTMLButtonElement;
-  protected errorsElement: HTMLElement;
 
   constructor(
     protected events: IEvents,
     container: HTMLElement,
   ) {
-    super(container);
+    super(container, 'button[type="submit"]');
 
     this.emailInput = ensureElement<HTMLInputElement>(
       'input[name="email"]',
@@ -30,13 +28,6 @@ export class ContactsView extends Component<IContactsView> {
       'input[name="phone"]',
       container,
     );
-
-    this.submitButton = ensureElement<HTMLButtonElement>(
-      'button[type="submit"]',
-      container,
-    );
-
-    this.errorsElement = ensureElement(".form__errors", container);
     
     // Обработчики событий
     this.emailInput.addEventListener("input", () => {
@@ -64,13 +55,5 @@ export class ContactsView extends Component<IContactsView> {
 
   set phone(value: string) {
     this.phoneInput.value = value;
-  }
-
-  set valid(value: boolean) {
-    this.submitButton.disabled = !value;
-  }
-
-  set errors(value: string) {
-    this.errorsElement.textContent = value;
   }
 }

@@ -1,39 +1,24 @@
 import { ensureElement } from "../../../utils/utils";
-import { Component } from "../../base/Component";
+import { Card } from "../Card";
 
 interface IBasketCard {
-  index: number,
-  title: string,
-  price: number | null
+  index: number;
+  title: string;
+  price: number | null;
 }
 
-export class BasketCard extends Component<IBasketCard> {
+export class BasketCard extends Card<IBasketCard> {
   protected indexElement: HTMLElement;
-  protected titleElement: HTMLElement;
-  protected priceElement: HTMLElement;
   protected deleteButton: HTMLButtonElement;
 
   constructor(container: HTMLElement) {
     super(container);
 
-    this.indexElement = ensureElement(
-      '.basket__item-index',
-      container
-    );
-
-    this.titleElement = ensureElement(
-      '.card__title',
-      container
-    );
-
-    this.priceElement = ensureElement(
-      '.card__price',
-      container
-    );
+    this.indexElement = ensureElement(".basket__item-index", container);
 
     this.deleteButton = ensureElement<HTMLButtonElement>(
-      '.basket__item-delete',
-      container
+      ".basket__item-delete",
+      container,
     );
   }
 
@@ -46,13 +31,10 @@ export class BasketCard extends Component<IBasketCard> {
   }
 
   set price(value: number | null) {
-    this.priceElement.textContent =
-      value !== null ?  
-      `${value} синапсов`
-      : "-";
+    this.priceElement.textContent = value !== null ? `${value} синапсов` : "-";
   }
 
   set onDelete(handler: () => void) {
-    this.deleteButton.addEventListener('click', handler);
+    this.deleteButton.addEventListener("click", handler);
   }
 }

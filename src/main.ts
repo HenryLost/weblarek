@@ -37,9 +37,9 @@ const webApi = new WebLarekApi(api);
 // ======================
 // Models
 // ======================
-const productsModel = new Products();
-const basketModel = new Basket();
-const orderModel = new Order();
+const productsModel = new Products(events);
+const basketModel = new Basket(events);
+const orderModel = new Order(events);
 
 // ======================
 // Views
@@ -76,7 +76,6 @@ const templates = {
 let currentCardView: CardView | null = null;
 let currentPaymentView: PaymentView | null = null;
 let currentContactsView: ContactsView | null = null;
-let currentItem: IProduct | null = null;
 let basketOpened = false;
 
 // ======================
@@ -98,7 +97,7 @@ function getOrderState() {
 // Form helpers
 // ======================
 
-function renderPaymentForm() {
+function renderPaymentForm(): void {
   if (!currentPaymentView) return;
 
   const { buyer, errors } = getOrderState();
@@ -111,7 +110,7 @@ function renderPaymentForm() {
   });
 }
 
-function renderContactsForm() {
+function renderContactsForm(): void {
   if (!currentContactsView) return;
 
   const { buyer, errors } = getOrderState();
@@ -133,7 +132,7 @@ function createCatalogCard(item: IProduct): HTMLElement {
   const card = new GalleryCard(cardElement);
 
   cardElement.addEventListener("click", () => {
-    events.emit("card:select", item);
+    productsModel.setSelectedItem(item);
   });
 
   return card.render({
@@ -143,6 +142,14 @@ function createCatalogCard(item: IProduct): HTMLElement {
     category: item.category,
   });
 }
+
+events.on("products:changed", () => {
+  const cards = productsModel.getItems().map(createCatalogCard);
+
+  gallery.render({
+    items: cards,
+  });
+});
 
 // ======================
 // Basket helpers
@@ -163,7 +170,7 @@ function createBasketCard(item: IProduct, index: number): HTMLElement {
   });
 }
 
-function renderBasket() {
+function renderBasket(): void {
   const items = basketModel.getItems();
   const basketCards = items.map(createBasketCard);
   const basketElement = cloneTemplate(templates.basket);
@@ -182,14 +189,13 @@ function renderBasket() {
 // Catalog events
 // ======================
 
-events.on("card:select", (item: IProduct) => {
+events.on("product:selected", (item: IProduct) => {
   modal.size = "card";
 
   const previewElement = cloneTemplate(templates.preview);
   const cardView = new CardView(previewElement, events);
 
   currentCardView = cardView;
-  currentItem = item;
 
   const inBasket = basketModel.hasProduct(item.id);
 
@@ -201,7 +207,6 @@ events.on("card:select", (item: IProduct) => {
       category: item.category,
       description: item.description,
       buttonText: inBasket ? "Удалить из корзины" : "Купить",
-      data: item,
     }),
   });
 
@@ -222,20 +227,20 @@ events.on("basket:open", () => {
   modal.open();
 });
 
-events.on("basket:toggle", (item: IProduct) => {
+events.on("basket:toggle", () => {
+  const item = productsModel.getSelectedItem();
+
+  if (!item) return;
+
   if (basketModel.hasProduct(item.id)) {
     basketModel.removeProduct(item.id);
   } else {
     basketModel.addProduct(item);
   }
-
-  events.emit("basket:changed");
 });
 
 events.on("basket:remove", (item: IProduct) => {
   basketModel.removeProduct(item.id);
-
-  events.emit("basket:changed");
 });
 
 events.on("basket:changed", () => {
@@ -247,17 +252,24 @@ events.on("basket:changed", () => {
     renderBasket();
   }
 
-  if (!currentCardView || !currentItem) {
+  const selectedItem = productsModel.getSelectedItem();
+
+  if (!currentCardView || !selectedItem) {
     return;
   }
 
-  const inBasket = basketModel.hasProduct(currentItem.id);
+  const inBasket = basketModel.hasProduct(selectedItem.id);
 
   currentCardView.buttonText = inBasket ? "Удалить из корзины" : "Купить";
 });
 
 events.on("modal:close", () => {
   basketOpened = false;
+});
+
+events.on("order:changed", () => {
+  renderPaymentForm();
+  renderContactsForm();
 });
 
 // ======================
@@ -290,16 +302,12 @@ events.on("payment:change", (data: { payment: TPayment }) => {
   orderModel.setBuyer({
     payment: data.payment,
   });
-
-  renderPaymentForm();
 });
 
 events.on("address:change", (data: { address: string }) => {
   orderModel.setBuyer({
     address: data.address,
   });
-
-  renderPaymentForm();
 });
 
 events.on("order:submit", () => {
@@ -333,16 +341,12 @@ events.on("contacts.email:change", (data: { email: string }) => {
   orderModel.setBuyer({
     email: data.email,
   });
-
-  renderContactsForm();
 });
 
 events.on("contacts.phone:change", (data: { phone: string }) => {
   orderModel.setBuyer({
     phone: data.phone,
   });
-
-  renderContactsForm();
 });
 
 events.on("contacts:submit", () => {
@@ -377,14 +381,12 @@ events.on("order:success", (result: IOrderResponse) => {
     }),
   });
 
+  basketOpened = false;
+  currentPaymentView = null;
+  currentContactsView = null;
+
   basketModel.clearBasket();
   orderModel.clearOrder();
-
-  basketOpened = false;
-
-  header.render({
-    counter: 0,
-  });
 });
 
 events.on("success:close", () => {
@@ -399,12 +401,6 @@ webApi
   .getProducts()
   .then((data) => {
     productsModel.setItems(data.items);
-
-    const cards = productsModel.getItems().map(createCatalogCard);
-
-    gallery.render({
-      items: cards,
-    });
   })
   .catch((err) => {
     console.error("Ошибка загрузки:", err);

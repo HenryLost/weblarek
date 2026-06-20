@@ -1,18 +1,16 @@
 import { ensureElement } from "../../utils/utils";
-import { Component } from "../base/Component";
+import { Card } from "./Card";
 import { categoryMap, CDN_URL } from "../../utils/constants";
 
-interface ICard {
+interface IGalleryCard {
   title: string;
   image: string;
   price: number | null;
   category: string;
 }
 
-export class GalleryCard extends Component<ICard> {
-  protected titleElement: HTMLElement;
+export class GalleryCard extends Card<IGalleryCard> {
   protected imageElement: HTMLImageElement;
-  protected priceElement: HTMLElement;
   protected categoryElement: HTMLElement;
 
   constructor(container: HTMLElement) {
@@ -27,23 +25,12 @@ export class GalleryCard extends Component<ICard> {
     this.categoryElement = ensureElement(".card__category", container);
   }
 
-  set title(value: string) {
-    this.titleElement.textContent = value;
-  }
-
   set image(value: string) {
     this.setImage(
       this.imageElement,
       `${CDN_URL}${value}`,
       this.titleElement.textContent ?? "",
     );
-  }
-
-  set price(value: number | null) {
-    this.priceElement.textContent =
-      value === null ? 
-      "Бесценно" : 
-      `${value} синапсов`;
   }
 
   set category(value: string) {

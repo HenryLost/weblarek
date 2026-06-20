@@ -1,33 +1,36 @@
 import { IProduct } from "../../types";
+import { IEvents } from "../base/Events";
 
-// Только хранение данных!
 export class Products {
   protected items: IProduct[] = [];
-  protected selected: IProduct | null = null;
+  protected selectedItem: IProduct | null = null;
+
+  constructor(protected events: IEvents) {}
+
+  // Сохраняем список товаров
+  setItems(items: IProduct[]): void {
+    this.items = items;
+    this.events.emit("products:changed");
+  }
 
   // Получаем список товаров
   getItems(): IProduct[] {
     return this.items;
   }
 
-  // Сохраняем список товаров
-  setItems(items: IProduct[]): void {
-    this.items = items;
+  // Сохраняем выбранную карточку
+  setSelectedItem(item: IProduct): void {
+    this.selectedItem = item;
+    this.events.emit("product:selected", item);
+  }
+
+  // Получаем выбранную карточку
+  getSelectedItem(): IProduct | null {
+    return this.selectedItem;
   }
 
   // Получаем товар по его id
   getItemById(id: string): IProduct | undefined {
-    return this.items.find(item => item.id === id);
-  }
-
-  // Сохраняем выбранную карточку
-  setSelected(product: IProduct): void {
-    this.selected = product;
-  }
-
-  // Получаем выбранную карточку
-  getSelected(): IProduct | null {
-    return this.selected;
+    return this.items.find((item) => item.id === id);
   }
 }
-

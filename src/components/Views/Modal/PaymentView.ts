@@ -1,5 +1,5 @@
 import { ensureElement } from "../../../utils/utils";
-import { Component } from "../../base/Component";
+import { Form } from "../Form";
 import { IEvents } from "../../base/Events";
 import { TPayment } from "../../../types";
 
@@ -10,18 +10,16 @@ interface IPaymentView {
   errors: string;
 }
 
-export class PaymentView extends Component<IPaymentView> {
+export class PaymentView extends Form<IPaymentView> {
   protected cardButton: HTMLButtonElement;
   protected cashButton: HTMLButtonElement;
   protected addressInput: HTMLInputElement;
-  protected submitButton: HTMLButtonElement;
-  protected errorsElement: HTMLElement;
 
   constructor(
     protected events: IEvents,
     container: HTMLElement,
   ) {
-    super(container);
+    super(container, ".order__button");
 
     this.cardButton = ensureElement<HTMLButtonElement>(
       'button[name="card"]',
@@ -37,13 +35,6 @@ export class PaymentView extends Component<IPaymentView> {
       'input[name="address"]',
       container,
     );
-
-    this.submitButton = ensureElement<HTMLButtonElement>(
-      ".order__button",
-      container,
-    );
-
-    this.errorsElement = ensureElement(".form__errors", container);
 
     // Обработчики событий
     this.cardButton.addEventListener("click", () => {
@@ -73,19 +64,10 @@ export class PaymentView extends Component<IPaymentView> {
 
   set payment(value: TPayment) {
     this.cardButton.classList.toggle("button_alt-active", value === "card");
-
     this.cashButton.classList.toggle("button_alt-active", value === "cash");
   }
 
   set address(value: string) {
     this.addressInput.value = value;
-  }
-
-  set valid(value: boolean) {
-    this.submitButton.disabled = !value;
-  }
-
-  set errors(value: string) {
-    this.errorsElement.textContent = value;
   }
 }

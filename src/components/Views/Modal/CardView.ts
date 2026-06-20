@@ -1,6 +1,5 @@
-import { IProduct } from "../../../types";
 import { ensureElement } from "../../../utils/utils";
-import { Component } from "../../base/Component";
+import { Card } from "../Card";
 import { categoryMap, CDN_URL } from "../../../utils/constants";
 import { EventEmitter } from "../../base/Events";
 
@@ -11,18 +10,13 @@ interface ICardView {
   category: string;
   description: string;
   buttonText: string;
-  data: IProduct;
 }
 
-export class CardView extends Component<ICardView> {
-  protected titleElement: HTMLElement;
+export class CardView extends Card<ICardView> {
   protected imageElement: HTMLImageElement;
-  protected priceElement: HTMLElement;
   protected categoryElement: HTMLElement;
   protected descriptionElement: HTMLElement;
   protected buttonElement: HTMLButtonElement;
-  protected currentPrice: number | null = null;
-  protected item!: IProduct;
 
   constructor(
     container: HTMLElement,
@@ -30,14 +24,10 @@ export class CardView extends Component<ICardView> {
   ) {
     super(container);
 
-    this.titleElement = ensureElement(".card__title", container);
-
     this.imageElement = ensureElement<HTMLImageElement>(
       ".card__image",
       container,
     );
-
-    this.priceElement = ensureElement(".card__price", container);
 
     this.categoryElement = ensureElement(".card__category", container);
 
@@ -49,12 +39,8 @@ export class CardView extends Component<ICardView> {
     );
 
     this.buttonElement.addEventListener("click", () => {
-      this.events.emit("basket:toggle", this.item);
+      this.events.emit("basket:toggle");
     });
-  }
-
-  set title(value: string) {
-    this.titleElement.textContent = value;
   }
 
   set image(value: string) {
@@ -66,10 +52,7 @@ export class CardView extends Component<ICardView> {
   }
 
   set price(value: number | null) {
-    this.currentPrice = value;
-
-    this.priceElement.textContent =
-      value === null ? "Бесценно" : `${value} синапсов`;
+    super.price = value;
 
     this.buttonElement.disabled = value === null;
 
@@ -97,10 +80,8 @@ export class CardView extends Component<ICardView> {
   }
 
   set buttonText(value: string) {
-    this.buttonElement.textContent = value;
-  }
-
-  set data(value: IProduct) {
-    this.item = value;
+    if (!this.buttonElement.disabled) {
+      this.buttonElement.textContent = value;
+    }
   }
 }
