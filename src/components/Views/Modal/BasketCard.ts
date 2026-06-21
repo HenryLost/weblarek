@@ -11,7 +11,10 @@ export class BasketCard extends Card<IBasketCard> {
   protected indexElement: HTMLElement;
   protected deleteButton: HTMLButtonElement;
 
-  constructor(container: HTMLElement) {
+  constructor(
+    container: HTMLElement,
+    onDelete: () => void,
+  ) {
     super(container);
 
     this.indexElement = ensureElement(".basket__item-index", container);
@@ -20,21 +23,11 @@ export class BasketCard extends Card<IBasketCard> {
       ".basket__item-delete",
       container,
     );
+
+    this.deleteButton.addEventListener("click", onDelete);
   }
 
   set index(value: number) {
     this.indexElement.textContent = String(value);
-  }
-
-  set title(value: string) {
-    this.titleElement.textContent = value;
-  }
-
-  set price(value: number | null) {
-    this.priceElement.textContent = value !== null ? `${value} синапсов` : "-";
-  }
-
-  set onDelete(handler: () => void) {
-    this.deleteButton.addEventListener("click", handler);
   }
 }

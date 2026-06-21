@@ -9,7 +9,6 @@ interface IModal {
 export class Modal extends Component<IModal> {
   protected closeButton: HTMLButtonElement;
   protected contentElement: HTMLElement;
-  protected innerContainer: HTMLElement;
 
   constructor(
     protected events: IEvents,
@@ -24,8 +23,6 @@ export class Modal extends Component<IModal> {
 
     this.contentElement = ensureElement(".modal__content", container);
 
-    this.innerContainer = ensureElement(".modal__container", container);
-
     this.closeButton.addEventListener("click", () => {
       this.close();
     });
@@ -39,16 +36,6 @@ export class Modal extends Component<IModal> {
 
   set content(value: HTMLElement) {
     this.contentElement.replaceChildren(value);
-  }
-
-  set size(value: "basket" | "card" | "form") {
-    this.innerContainer.classList.remove(
-      "modal__container_basket",
-      "modal__container_card",
-      "modal__container_form",
-    );
-
-    this.innerContainer.classList.add(`modal__container_${value}`);
   }
 
   open() {

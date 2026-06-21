@@ -42,21 +42,6 @@ const basketModel = new Basket(events);
 const orderModel = new Order(events);
 
 // ======================
-// Views
-// ======================
-const header = new Header(
-  events,
-  document.querySelector(".header") as HTMLElement,
-);
-
-const gallery = new Gallery(document.querySelector(".gallery") as HTMLElement);
-
-const modal = new Modal(
-  events,
-  document.querySelector("#modal-container") as HTMLElement,
-);
-
-// ======================
 // Templates
 // ======================
 const templates = {
@@ -71,12 +56,26 @@ const templates = {
 };
 
 // ======================
-// State
+// Views
 // ======================
-let currentCardView: CardView | null = null;
-let currentPaymentView: PaymentView | null = null;
-let currentContactsView: ContactsView | null = null;
-let basketOpened = false;
+const header = new Header(
+  events,
+  document.querySelector(".header") as HTMLElement,
+);
+const gallery = new Gallery(document.querySelector(".gallery") as HTMLElement);
+const modal = new Modal(
+  events,
+  document.querySelector("#modal-container") as HTMLElement,
+);
+
+const basketView = new BasketView(events, cloneTemplate(templates.basket));
+const cardView = new CardView(cloneTemplate(templates.preview), events);
+const paymentView = new PaymentView(events, cloneTemplate(templates.payment));
+const contactsView = new ContactsView(
+  events,
+  cloneTemplate(templates.contacts),
+);
+const successView = new SuccessView(events, cloneTemplate(templates.success));
 
 // ======================
 // Common helpers
@@ -98,11 +97,9 @@ function getOrderState() {
 // ======================
 
 function renderPaymentForm(): void {
-  if (!currentPaymentView) return;
-
   const { buyer, errors } = getOrderState();
 
-  currentPaymentView.render({
+  paymentView.render({
     payment: buyer.payment,
     address: buyer.address,
     valid: !errors.payment && !errors.address,
@@ -111,11 +108,9 @@ function renderPaymentForm(): void {
 }
 
 function renderContactsForm(): void {
-  if (!currentContactsView) return;
-
   const { buyer, errors } = getOrderState();
 
-  currentContactsView.render({
+  contactsView.render({
     email: buyer.email,
     phone: buyer.phone,
     valid: !errors.email && !errors.phone,
@@ -129,10 +124,8 @@ function renderContactsForm(): void {
 
 function createCatalogCard(item: IProduct): HTMLElement {
   const cardElement = cloneTemplate(templates.catalog);
-  const card = new GalleryCard(cardElement);
-
-  cardElement.addEventListener("click", () => {
-    productsModel.setSelectedItem(item);
+  const card = new GalleryCard(cardElement, () => {
+    events.emit("product:select", item);
   });
 
   return card.render({
@@ -157,11 +150,9 @@ events.on("products:changed", () => {
 
 function createBasketCard(item: IProduct, index: number): HTMLElement {
   const cardElement = cloneTemplate(templates.basketCard);
-  const card = new BasketCard(cardElement);
-
-  card.onDelete = () => {
+  const card = new BasketCard(cardElement, () => {
     events.emit("basket:remove", item);
-  };
+  });
 
   return card.render({
     index: index + 1,
@@ -173,8 +164,6 @@ function createBasketCard(item: IProduct, index: number): HTMLElement {
 function renderBasket(): void {
   const items = basketModel.getItems();
   const basketCards = items.map(createBasketCard);
-  const basketElement = cloneTemplate(templates.basket);
-  const basketView = new BasketView(events, basketElement);
 
   modal.render({
     content: basketView.render({
@@ -189,14 +178,11 @@ function renderBasket(): void {
 // Catalog events
 // ======================
 
+events.on("product:select", (item: IProduct) => {
+  productsModel.setSelectedItem(item);
+});
+
 events.on("product:selected", (item: IProduct) => {
-  modal.size = "card";
-
-  const previewElement = cloneTemplate(templates.preview);
-  const cardView = new CardView(previewElement, events);
-
-  currentCardView = cardView;
-
   const inBasket = basketModel.hasProduct(item.id);
 
   modal.render({
@@ -218,10 +204,6 @@ events.on("product:selected", (item: IProduct) => {
 // ======================
 
 events.on("basket:open", () => {
-  basketOpened = true;
-
-  modal.size = "basket";
-
   renderBasket();
 
   modal.open();
@@ -237,10 +219,13 @@ events.on("basket:toggle", () => {
   } else {
     basketModel.addProduct(item);
   }
+
+  modal.close();
 });
 
 events.on("basket:remove", (item: IProduct) => {
   basketModel.removeProduct(item.id);
+  renderBasket();
 });
 
 events.on("basket:changed", () => {
@@ -248,23 +233,13 @@ events.on("basket:changed", () => {
     counter: basketModel.getItems().length,
   });
 
-  if (basketOpened) {
-    renderBasket();
-  }
-
   const selectedItem = productsModel.getSelectedItem();
 
-  if (!currentCardView || !selectedItem) {
-    return;
-  }
+  if (!selectedItem) return;
 
   const inBasket = basketModel.hasProduct(selectedItem.id);
 
-  currentCardView.buttonText = inBasket ? "Удалить из корзины" : "Купить";
-});
-
-events.on("modal:close", () => {
-  basketOpened = false;
+  cardView.buttonText = inBasket ? "Удалить из корзины" : "Купить";
 });
 
 events.on("order:changed", () => {
@@ -277,13 +252,6 @@ events.on("order:changed", () => {
 // ======================
 
 events.on("order:start", () => {
-  modal.size = "form";
-
-  const paymentElement = cloneTemplate(templates.payment);
-  const paymentView = new PaymentView(events, paymentElement);
-
-  currentPaymentView = paymentView;
-
   const buyer = orderModel.getBuyer();
 
   modal.render({
@@ -311,17 +279,7 @@ events.on("address:change", (data: { address: string }) => {
 });
 
 events.on("order:submit", () => {
-  const { buyer, errors } = getOrderState();
-
-  if (errors.payment || errors.address) {
-    renderPaymentForm();
-    return;
-  }
-
-  const contactsElement = cloneTemplate(templates.contacts);
-  const contactsView = new ContactsView(events, contactsElement);
-
-  currentContactsView = contactsView;
+  const buyer = orderModel.getBuyer();
 
   modal.render({
     content: contactsView.render({
@@ -350,12 +308,7 @@ events.on("contacts.phone:change", (data: { phone: string }) => {
 });
 
 events.on("contacts:submit", () => {
-  const { buyer, errors } = getOrderState();
-
-  if (errors.payment || errors.address || errors.email || errors.phone) {
-    renderContactsForm();
-    return;
-  }
+  const buyer = orderModel.getBuyer();
 
   webApi
     .createOrder({
@@ -372,18 +325,11 @@ events.on("contacts:submit", () => {
 });
 
 events.on("order:success", (result: IOrderResponse) => {
-  const successElement = cloneTemplate(templates.success);
-  const successView = new SuccessView(events, successElement);
-
   modal.render({
     content: successView.render({
       total: result.total,
     }),
   });
-
-  basketOpened = false;
-  currentPaymentView = null;
-  currentContactsView = null;
 
   basketModel.clearBasket();
   orderModel.clearOrder();

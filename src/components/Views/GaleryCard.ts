@@ -13,16 +13,20 @@ export class GalleryCard extends Card<IGalleryCard> {
   protected imageElement: HTMLImageElement;
   protected categoryElement: HTMLElement;
 
-  constructor(container: HTMLElement) {
+  constructor(
+    container: HTMLElement, 
+    onClick: () => void
+  ) {
     super(container);
 
-    this.titleElement = ensureElement(".card__title", container);
     this.imageElement = ensureElement<HTMLImageElement>(
       ".card__image",
       container,
     );
-    this.priceElement = ensureElement(".card__price", container);
+    
     this.categoryElement = ensureElement(".card__category", container);
+
+    this.container.addEventListener("click", onClick);
   }
 
   set image(value: string) {
