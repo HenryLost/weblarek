@@ -205,7 +205,6 @@ events.on("product:selected", (item: IProduct) => {
 
 events.on("basket:open", () => {
   renderBasket();
-
   modal.open();
 });
 
@@ -225,7 +224,6 @@ events.on("basket:toggle", () => {
 
 events.on("basket:remove", (item: IProduct) => {
   basketModel.removeProduct(item.id);
-  renderBasket();
 });
 
 events.on("basket:changed", () => {
@@ -233,13 +231,7 @@ events.on("basket:changed", () => {
     counter: basketModel.getItems().length,
   });
 
-  const selectedItem = productsModel.getSelectedItem();
-
-  if (!selectedItem) return;
-
-  const inBasket = basketModel.hasProduct(selectedItem.id);
-
-  cardView.buttonText = inBasket ? "Удалить из корзины" : "Купить";
+  renderBasket();
 });
 
 events.on("order:changed", () => {
@@ -325,14 +317,14 @@ events.on("contacts:submit", () => {
 });
 
 events.on("order:success", (result: IOrderResponse) => {
-  modal.render({
-    content: successView.render({
-      total: result.total,
-    }),
-  });
-
   basketModel.clearBasket();
   orderModel.clearOrder();
+
+  modal.render({
+    content: successView.render({
+    total: result.total,
+    }),
+  });
 });
 
 events.on("success:close", () => {
